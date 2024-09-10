@@ -19,6 +19,9 @@ eval prediction_result:
 demo:
 	poetry run streamlit run demo/app.py
 
+langfuse_dashboard:
+	poetry run streamlit run eval/dashboard/app.py
+
 test: up && down
 	poetry run pytest -s $(args)
 
