@@ -2907,6 +2907,20 @@ typing = ["typing-extensions"]
 xmp = ["defusedxml"]
 
 [[package]]
+name = "pip-system-certs"
+version = "4.0"
+description = "Live patches pip to use system certs by default"
+optional = false
+python-versions = ">=2.7.9, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+files = [
+    {file = "pip_system_certs-4.0-py2.py3-none-any.whl", hash = "sha256:47202b9403a6f40783a9674bbc8873f5fc86544ec01a49348fa913e99e2ff68b"},
+    {file = "pip_system_certs-4.0.tar.gz", hash = "sha256:db8e6a31388d9795ec9139957df1a89fa5274fb66164456fd091a5d3e94c350c"},
+]
+
+[package.dependencies]
+wrapt = ">=1.10.4"
+
+[[package]]
 name = "platformdirs"
 version = "4.3.2"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
@@ -5310,4 +5324,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12.*, <4.0"
-content-hash = "85550b4959ed3b80a5ea02854b04960a8004c97694085976ffa2f9749f60e6f7"
+content-hash = "4cc480f4f0d589ed4f937190d547344915a59f0270261b27ef16f7ecb8483d21"
