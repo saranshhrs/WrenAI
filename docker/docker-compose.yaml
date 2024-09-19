@@ -9,9 +9,9 @@ networks:
 
 services:
   bootstrap:
-    image: ghcr.io/canner/wren-bootstrap:${WREN_BOOTSTRAP_VERSION}
+    image: ghcr.io/canner/wren-bootstrap:0.1.5
     restart: on-failure
-    platform: ${PLATFORM}
+    platform: -linux/amd64,linux/arm64
     environment:
       DATA_PATH: /app/data
     volumes:
@@ -19,12 +19,12 @@ services:
     command: /bin/sh /app/init.sh
 
   wren-engine:
-    image: ghcr.io/canner/wren-engine:${WREN_ENGINE_VERSION}
+    image: ghcr.io/canner/wren-engine:0.9.3
     restart: on-failure
-    platform: ${PLATFORM}
+    platform: -linux/amd64,linux/arm64
     expose:
-      - ${WREN_ENGINE_PORT}
-      - ${WREN_ENGINE_SQL_PORT}
+      - 8080
+      - 7432
     volumes:
       - data:/usr/src/app/etc
     networks:
@@ -33,37 +33,34 @@ services:
       - bootstrap
 
   ibis-server:
-    image: ghcr.io/canner/wren-engine-ibis:${IBIS_SERVER_VERSION}
+    image: ghcr.io/canner/wren-engine-ibis:0.9.3
     restart: on-failure
-    platform: ${PLATFORM}
+    platform: linux/amd64,linux/arm64
     expose:
-      - ${IBIS_SERVER_PORT}
+      - 8000
     environment:
       WREN_ENGINE_ENDPOINT: http://wren-engine:${WREN_ENGINE_PORT}
     networks:
       - wren
 
   wren-ai-service:
-    image: ghcr.io/canner/wren-ai-service:${WREN_AI_SERVICE_VERSION}
+    image: ghcr.io/canner/wren-ai-service:0.8.11
     restart: on-failure
-    platform: ${PLATFORM}
+    platform: linux/amd64,linux/arm64
     expose:
-      - ${WREN_AI_SERVICE_PORT}
+      - 5555
     ports:
-      - ${AI_SERVICE_FORWARD_PORT}:${WREN_AI_SERVICE_PORT}
+      - 5555
     environment:
-      WREN_AI_SERVICE_PORT: ${WREN_AI_SERVICE_PORT}
-      WREN_UI_PORT: ${WREN_UI_PORT}
-      WREN_UI_ENDPOINT: http://wren-ui:${WREN_UI_PORT}
-      QDRANT_HOST: ${QDRANT_HOST}
-      LLM_OPENAI_API_KEY: ${LLM_OPENAI_API_KEY}
-      EMBEDDER_OPENAI_API_KEY: ${EMBEDDER_OPENAI_API_KEY}
-      LLM_AZURE_OPENAI_API_KEY: ${LLM_AZURE_OPENAI_API_KEY}
-      EMBEDDER_AZURE_OPENAI_API_KEY: ${EMBEDDER_AZURE_OPENAI_API_KEY}
-      GENERATION_MODEL: ${GENERATION_MODEL}
-      ENABLE_TIMER: ${AI_SERVICE_ENABLE_TIMER}
-      LOGGING_LEVEL: ${AI_SERVICE_LOGGING_LEVEL}
-      SHOULD_FORCE_DEPLOY: ${SHOULD_FORCE_DEPLOY}
+      WREN_AI_SERVICE_PORT: 5555
+      WREN_UI_PORT: 3000
+      WREN_UI_ENDPOINT: http://wren-ui:3000
+      QDRANT_HOST: qdrant
+      LLM_OPENAI_API_KEY: sk-wPiVJOrgu2L3m7DUrWXq4KLJZwCrC3sM_jbq6_b4fST3BlbkFJiIgIq75ybkT_88hlMseL7BdP9LH8CRFyRQvdNInmcA
+      EMBEDDER_OPENAI_API_KEY: sk-wPiVJOrgu2L3m7DUrWXq4KLJZwCrC3sM_jbq6_b4fST3BlbkFJiIgIq75ybkT_88hlMseL7BdP9LH8CRFyRQvdNInmcA
+      GENERATION_MODEL: gpt-4o-mini
+      ENABLE_TIMER: 1
+      LOGGING_LEVEL: INFO
       # sometimes the console won't show print messages,
       # using PYTHONUNBUFFERED: 1 can fix this
       PYTHONUNBUFFERED: 1
@@ -84,38 +81,38 @@ services:
       - wren
 
   wren-ui:
-    image: ghcr.io/canner/wren-ui:${WREN_UI_VERSION}
+    image: ghcr.io/canner/wren-ui:
     restart: on-failure
-    platform: ${PLATFORM}
+    platform: linux/amd64,linux/arm64
     environment:
       DB_TYPE: sqlite
       # /app is the working directory in the container
       SQLITE_FILE: /app/data/db.sqlite3
-      WREN_ENGINE_ENDPOINT: http://wren-engine:${WREN_ENGINE_PORT}
-      WREN_AI_ENDPOINT: http://wren-ai-service:${WREN_AI_SERVICE_PORT}
-      IBIS_SERVER_ENDPOINT: http://ibis-server:${IBIS_SERVER_PORT}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
-      EMBEDDING_MODEL_DIMENSION: ${EMBEDDING_MODEL_DIMENSION}
-      GENERATION_MODEL: ${GENERATION_MODEL}
+      WREN_ENGINE_ENDPOINT: http://wren-engine:8080
+      WREN_AI_ENDPOINT: http://wren-ai-service:5555
+      IBIS_SERVER_ENDPOINT: http://ibis-server:8000
+      EMBEDDING_MODEL: text-embedding-3-large
+      EMBEDDING_MODEL_DIMENSION: 3072
+      GENERATION_MODEL: gpt-4o-mini
       # telemetry
-      WREN_ENGINE_PORT: ${WREN_ENGINE_PORT}
-      WREN_AI_SERVICE_VERSION: ${WREN_AI_SERVICE_VERSION}
-      WREN_UI_VERSION: ${WREN_UI_VERSION}
-      WREN_ENGINE_VERSION: ${WREN_ENGINE_VERSION}
-      USER_UUID: ${USER_UUID}
-      POSTHOG_API_KEY: ${POSTHOG_API_KEY}
-      POSTHOG_HOST: ${POSTHOG_HOST}
-      TELEMETRY_ENABLED: ${TELEMETRY_ENABLED}
+      WREN_ENGINE_PORT: 8080
+      WREN_AI_SERVICE_VERSION: 0.8.11
+      WREN_UI_VERSION: 0.11.1
+      WREN_ENGINE_VERSION: 0.9.3
+      USER_UUID: wrenai-secrets
+      POSTHOG_API_KEY: phc_nhF32aj4xHXOZb0oqr2cn4Oy9uiWzz6CCP4KZmRq9aE
+      POSTHOG_HOST: https://app.posthog.com
+      TELEMETRY_ENABLED: true
       # client side
-      NEXT_PUBLIC_USER_UUID: ${USER_UUID}
-      NEXT_PUBLIC_POSTHOG_API_KEY: ${POSTHOG_API_KEY}
-      NEXT_PUBLIC_POSTHOG_HOST: ${POSTHOG_HOST}
-      NEXT_PUBLIC_TELEMETRY_ENABLED: ${TELEMETRY_ENABLED}
+      NEXT_PUBLIC_USER_UUID: wrenai-secrets
+      NEXT_PUBLIC_POSTHOG_API_KEY: phc_nhF32aj4xHXOZb0oqr2cn4Oy9uiWzz6CCP4KZmRq9aE
+      NEXT_PUBLIC_POSTHOG_HOST: https://app.posthog.com
+      NEXT_PUBLIC_TELEMETRY_ENABLED: true
       # configs
-      WREN_PRODUCT_VERSION: ${WREN_PRODUCT_VERSION}
+      WREN_PRODUCT_VERSION: "0.8.0"
     ports:
       # HOST_PORT is the port you want to expose to the host machine
-      - ${HOST_PORT}:3000
+      - 3000
     volumes:
       - data:/app/data
     networks:
