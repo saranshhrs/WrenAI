@@ -1,79 +1,67 @@
 version: "3"
-
 volumes:
   data:
-
 networks:
   wren:
     driver: bridge
-
 services:
   bootstrap:
-    image: ghcr.io/canner/wren-bootstrap:${WREN_BOOTSTRAP_VERSION}
+    image: ghcr.io/canner/wren-bootstrap:0.1.5
     pull_policy: always
-    platform: ${PLATFORM}
+    platform: linux/amd64,linux/arm64
     environment:
       DATA_PATH: /app/data
     volumes:
       - data:/app/data
     command: /bin/sh /app/init.sh
-
   wren-engine:
-    image: ghcr.io/canner/wren-engine:${WREN_ENGINE_VERSION}
+    image: ghcr.io/canner/wren-engine:0.9.3
     pull_policy: always
-    platform: ${PLATFORM}
+    platform: linux/amd64,linux/arm64
     expose:
-      - ${WREN_ENGINE_SQL_PORT}
+      - 7432
     ports:
-      - ${WREN_ENGINE_PORT}:${WREN_ENGINE_PORT}
+      - 8080:8080
     volumes:
       - data:/usr/src/app/etc
     networks:
       - wren
     depends_on:
       - bootstrap
-
   wren-ai-service:
-    image: ghcr.io/canner/wren-ai-service:${WREN_AI_SERVICE_VERSION}
+    image: ghcr.io/canner/wren-ai-service:0.8.11
     pull_policy: always
-    platform: ${PLATFORM}
+    platform: linux/amd64,linux/arm64
     ports:
-      - ${AI_SERVICE_FORWARD_PORT}:${WREN_AI_SERVICE_PORT}
+      - 5555
     environment:
-      WREN_AI_SERVICE_PORT: ${WREN_AI_SERVICE_PORT}
-      WREN_UI_PORT: ${WREN_UI_PORT}
-      WREN_UI_ENDPOINT: ${WREN_UI_ENDPOINT}
-      QDRANT_HOST: ${QDRANT_HOST}
-      LLM_OPENAI_API_KEY: ${LLM_OPENAI_API_KEY}
-      EMBEDDER_OPENAI_API_KEY: ${EMBEDDER_OPENAI_API_KEY}
-      LLM_AZURE_OPENAI_API_KEY: ${LLM_AZURE_OPENAI_API_KEY}
-      EMBEDDER_AZURE_OPENAI_API_KEY: ${EMBEDDER_AZURE_OPENAI_API_KEY}
-      GENERATION_MODEL: ${GENERATION_MODEL}
-      ENABLE_TIMER: ${AI_SERVICE_ENABLE_TIMER}
-      LOGGING_LEVEL: ${AI_SERVICE_LOGGING_LEVEL}
-      SHOULD_FORCE_DEPLOY: ${SHOULD_FORCE_DEPLOY}
-      # sometimes the console won't show print messages,
-      # using PYTHONUNBUFFERED: 1 can fix this
+      WREN_AI_SERVICE_PORT: 5555
+      WREN_UI_PORT: 3000
+      WREN_UI_ENDPOINT: http://wren-ui:3000
+      QDRANT_HOST: qdrant
+      LLM_OPENAI_API_KEY: sk-wPiVJOrgu2L3m7DUrWXq4KLJZwCrC3sM_jbq6_b4fST3BlbkFJiIgIq75ybkT_88hlMseL7BdP9LH8CRFyRQvdNInmcA
+      EMBEDDER_OPENAI_API_KEY: sk-wPiVJOrgu2L3m7DUrWXq4KLJZwCrC3sM_jbq6_b4fST3BlbkFJiIgIq75ybkT_88hlMseL7BdP9LH8CRFyRQvdNInmcA
+      GENERATION_MODEL: gpt-4o-mini
+      ENABLE_TIMER: 1
+      LOGGING_LEVEL: INFO
       PYTHONUNBUFFERED: 1
     networks:
       - wren
     depends_on:
       - qdrant
-
   ibis-server:
-    image: ghcr.io/canner/wren-engine-ibis:${IBIS_SERVER_VERSION}
+    image: ghcr.io/canner/wren-engine-ibis:0.9.3
     pull_policy: always
-    platform: ${PLATFORM}
+    platform: linux/amd64,linux/arm64
     expose:
       - 8000
     ports:
-      - ${IBIS_SERVER_PORT}:8000
+      - 8000:8000
     environment:
-      WREN_ENGINE_ENDPOINT: http://wren-engine:${WREN_ENGINE_PORT}
+      WREN_ENGINE_ENDPOINT: http://wren-engine:8080
       LOG_LEVEL: DEBUG
     networks:
       - wren
-
   qdrant:
     image: qdrant/qdrant:v1.11.0
     pull_policy: always
@@ -82,11 +70,10 @@ services:
       - 6334:6334
     networks:
       - wren
-
   # If you want to use postgres for testing purpose, uncomment the following block
   # postgres:
   #   image: postgres:14-alpine
-  #   platform: ${PLATFORM}
+  #   platform: linux/amd64,linux/arm64
   #   ports:
   #     - 9432:5432
   #   volumes:
